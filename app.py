@@ -1,4 +1,4 @@
-                                                                                import os
+                                                                                                                                                  import os
 import io
 import glob
 import json
@@ -1343,11 +1343,34 @@ def page_detect(model, config):
     example_images = get_example_images()
     if example_images:
         # Usar streamlit-image-select para seleção
-        selected_image = image_select(
-            "",
-            images=[Image.open(img_path) for img_path in example_images],
-            captions=[os.path.basename(img_path).replace('.png', '').replace('_', ' ').title() for img_path in example_images]
-        )
+        try:
+            # Carrega as imagens dos arquivos temporários
+            loaded_images = []
+            captions = []
+            
+            for img_path in example_images:
+                try:
+                    img = Image.open(img_path)
+                    loaded_images.append(img)
+                    # Extrai o nome do arquivo original do sufixo
+                    original_name = img_path.split('_')[-1] if '_' in img_path else os.path.basename(img_path)
+                    caption = original_name.replace('.png', '').replace('_', ' ').title()
+                    captions.append(caption)
+                except Exception as e:
+                    st.warning(f"Erro ao carregar imagem {img_path}: {e}")
+            
+            if loaded_images:
+                selected_image = image_select(
+                    "",
+                    images=loaded_images,
+                    captions=captions
+                )
+            else:
+                selected_image = None
+                
+        except Exception as e:
+            st.error(f"Erro ao carregar imagens de exemplo: {e}")
+            selected_image = None
         
         if selected_image is not None:
             # Botão centralizado com key única para evitar duplicação
@@ -1385,7 +1408,7 @@ def page_detect(model, config):
                 if st.button("Analisar Imagem", type="primary", use_container_width=True, key="analyze_button"):
                     run_prediction(selected_image, "exemplo")
     else:
-        st.info("Nenhuma imagem de exemplo encontrada na pasta 'imagem'.")
+        st.info("Nenhuma imagem de exemplo encontrada. Verifique a conexão com o GitHub.")
 
 def page_training():
     """Página de análise do treinamento"""
