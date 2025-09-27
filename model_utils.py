@@ -109,7 +109,7 @@ def setup_model_and_config():
         
         # Carrega o modelo
         model = UNet().to(DEVICE)
-        model.load_state_dict(torch.load(tmp_model_path, map_location=DEVICE))
+        model.load_state_dict(torch.load(tmp_model_path, map_location=DEVICE, weights_only=False))
         model.eval()
         
         # Remove o arquivo temporário
