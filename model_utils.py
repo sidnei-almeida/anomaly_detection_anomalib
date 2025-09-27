@@ -99,17 +99,49 @@ def setup_model_and_config():
     
     # Baixa o modelo para um arquivo temporário
     try:
-        model_response = requests.get(MODEL_URL)
-        model_response.raise_for_status()
-        
-        # Cria arquivo temporário
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pth') as tmp_file:
-            tmp_file.write(model_response.content)
-            tmp_model_path = tmp_file.name
+        # Tenta baixar o modelo com retry
+        for attempt in range(3):
+            try:
+                model_response = requests.get(MODEL_URL, timeout=30)
+                model_response.raise_for_status()
+                
+                # Verifica se o conteúdo não está vazio
+                if len(model_response.content) < 1000:
+                    raise Exception("Arquivo muito pequeno, possível corrupção")
+                
+                # Cria arquivo temporário
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pth') as tmp_file:
+                    tmp_file.write(model_response.content)
+                    tmp_model_path = tmp_file.name
+                
+                # Testa se o arquivo pode ser carregado
+                try:
+                    test_checkpoint = torch.load(tmp_model_path, map_location=DEVICE, weights_only=False)
+                    if not isinstance(test_checkpoint, (dict, collections.OrderedDict)):
+                        raise Exception("Formato de checkpoint inválido")
+                    break  # Sucesso, sai do loop de retry
+                except Exception as e:
+                    if attempt == 2:  # Última tentativa
+                        raise Exception(f"Arquivo corrompido após {attempt+1} tentativas: {e}")
+                    continue  # Tenta novamente
+                    
+            except Exception as e:
+                if attempt == 2:  # Última tentativa
+                    raise Exception(f"Erro ao baixar modelo após {attempt+1} tentativas: {e}")
+                time.sleep(1)  # Aguarda antes de tentar novamente
+                continue
         
         # Carrega o modelo
         model = UNet().to(DEVICE)
-        model.load_state_dict(torch.load(tmp_model_path, map_location=DEVICE, weights_only=False))
+        checkpoint = torch.load(tmp_model_path, map_location=DEVICE, weights_only=False)
+        
+        if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['state_dict'])
+        elif isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            model.load_state_dict(checkpoint)
+        
         model.eval()
         
         # Remove o arquivo temporário
