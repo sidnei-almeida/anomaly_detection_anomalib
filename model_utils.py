@@ -80,7 +80,7 @@ def setup_model_and_config():
     DEVICE = torch.device('cpu')
     
     # URLs dos arquivos no GitHub
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/main"
+    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/refs/heads/main"
     MODEL_URL = f"{GITHUB_BASE_URL}/models/bottle_unet_best.pth"
     CONFIG_URL = f"{GITHUB_BASE_URL}/models/bottle_unet_config.json"
     

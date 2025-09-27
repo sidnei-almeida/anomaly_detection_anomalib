@@ -779,7 +779,7 @@ hr {
 @st.cache_data(show_spinner=False)
 def load_training_history():
     """Carrega o histórico de treinamento do modelo U-Net do GitHub"""
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/main"
+    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/refs/heads/main"
     HISTORY_URL = f"{GITHUB_BASE_URL}/training_history/bottle_unet_history.json"
     
     try:
@@ -793,7 +793,7 @@ def load_training_history():
 @st.cache_data(show_spinner=False)
 def get_example_images():
     """Carrega imagens de exemplo do GitHub"""
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/main"
+    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/refs/heads/main"
     
     # Lista de imagens de exemplo
     example_images = [
