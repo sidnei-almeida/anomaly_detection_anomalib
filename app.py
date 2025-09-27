@@ -778,48 +778,36 @@ hr {
 
 @st.cache_data(show_spinner=False)
 def load_training_history():
-    """Carrega o histórico de treinamento do modelo U-Net do GitHub"""
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/refs/heads/main"
-    HISTORY_URL = f"{GITHUB_BASE_URL}/training_history/bottle_unet_history.json"
+    """Carrega o histórico de treinamento do modelo U-Net localmente"""
+    HISTORY_PATH = "training_history/bottle_unet_history.json"
     
     try:
-        response = requests.get(HISTORY_URL)
-        response.raise_for_status()
-        return response.json()
+        with open(HISTORY_PATH, 'r') as f:
+            return json.load(f)
     except Exception as e:
         st.warning(f"Erro ao carregar histórico de treinamento: {e}")
         return None
 
 @st.cache_data(show_spinner=False)
 def get_example_images():
-    """Carrega imagens de exemplo do GitHub"""
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/refs/heads/main"
-    
+    """Carrega imagens de exemplo localmente"""
     # Lista de imagens de exemplo
     example_images = [
-        "000.png",
-        "anomaly_1.png", 
-        "anomaly_2.png",
-        "anomaly_3.png"
+        "imagem/000.png",
+        "imagem/anomaly_1.png", 
+        "imagem/anomaly_2.png",
+        "imagem/anomaly_3.png"
     ]
     
-    # Baixa as imagens do GitHub
-    downloaded_images = []
-    for image_name in example_images:
-        try:
-            image_url = f"{GITHUB_BASE_URL}/imagem/{image_name}"
-            response = requests.get(image_url)
-            response.raise_for_status()
-            
-            # Cria arquivo temporário
-            with tempfile.NamedTemporaryFile(delete=False, suffix=f'_{image_name}') as tmp_file:
-                tmp_file.write(response.content)
-                downloaded_images.append(tmp_file.name)
-                
-        except Exception as e:
-            st.warning(f"Erro ao baixar imagem {image_name}: {e}")
+    # Verifica se as imagens existem localmente
+    existing_images = []
+    for image_path in example_images:
+        if os.path.exists(image_path):
+            existing_images.append(image_path)
+        else:
+            st.warning(f"Imagem não encontrada: {image_path}")
     
-    return downloaded_images
+    return existing_images
 
 def get_env_status():
     """Retorna informações do ambiente"""

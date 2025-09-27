@@ -76,21 +76,19 @@ class UNet(nn.Module):
 @st.cache_resource
 def setup_model_and_config():
     """
-    Carrega o modelo U-Net e os thresholds a partir dos arquivos do GitHub.
+    Carrega o modelo U-Net e os thresholds a partir dos arquivos locais.
     Usa o cache do Streamlit para executar apenas uma vez.
     """
     DEVICE = torch.device('cpu')
     
-    # URLs dos arquivos no GitHub
-    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/refs/heads/main"
-    MODEL_URL = f"{GITHUB_BASE_URL}/models/bottle_unet_best.pth"
-    CONFIG_URL = f"{GITHUB_BASE_URL}/models/bottle_unet_config.json"
+    # Caminhos locais dos arquivos (Git LFS baixa automaticamente no Streamlit Cloud)
+    MODEL_PATH = "models/bottle_unet_best.pth"
+    CONFIG_PATH = "models/bottle_unet_config.json"
     
-    # Baixa e carrega a configuração
+    # Carrega a configuração
     try:
-        config_response = requests.get(CONFIG_URL)
-        config_response.raise_for_status()
-        config = config_response.json()
+        with open(CONFIG_PATH, 'r') as f:
+            config = json.load(f)
     except Exception as e:
         st.error(f"Erro ao carregar configuração: {e}")
         # Configuração padrão como fallback
@@ -99,43 +97,20 @@ def setup_model_and_config():
             "pixel_visualization_threshold": 20
         }
     
-    # Baixa o modelo para um arquivo temporário
+    # Carrega o modelo
     try:
-        # Tenta baixar o modelo com retry
-        for attempt in range(3):
-            try:
-                model_response = requests.get(MODEL_URL, timeout=30)
-                model_response.raise_for_status()
-                
-                # Verifica se o conteúdo não está vazio
-                if len(model_response.content) < 1000:
-                    raise Exception("Arquivo muito pequeno, possível corrupção")
-                
-                # Cria arquivo temporário
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pth') as tmp_file:
-                    tmp_file.write(model_response.content)
-                    tmp_model_path = tmp_file.name
-                
-                # Testa se o arquivo pode ser carregado
-                try:
-                    test_checkpoint = torch.load(tmp_model_path, map_location=DEVICE, weights_only=False)
-                    if not isinstance(test_checkpoint, (dict, collections.OrderedDict)):
-                        raise Exception("Formato de checkpoint inválido")
-                    break  # Sucesso, sai do loop de retry
-                except Exception as e:
-                    if attempt == 2:  # Última tentativa
-                        raise Exception(f"Arquivo corrompido após {attempt+1} tentativas: {e}")
-                    continue  # Tenta novamente
-                    
-            except Exception as e:
-                if attempt == 2:  # Última tentativa
-                    raise Exception(f"Erro ao baixar modelo após {attempt+1} tentativas: {e}")
-                time.sleep(1)  # Aguarda antes de tentar novamente
-                continue
+        # Verifica se o arquivo existe
+        if not os.path.exists(MODEL_PATH):
+            raise Exception(f"Arquivo do modelo não encontrado: {MODEL_PATH}")
+        
+        # Verifica o tamanho do arquivo
+        file_size = os.path.getsize(MODEL_PATH)
+        if file_size < 1000:
+            raise Exception(f"Arquivo do modelo muito pequeno ({file_size} bytes), possível problema com Git LFS")
         
         # Carrega o modelo
         model = UNet().to(DEVICE)
-        checkpoint = torch.load(tmp_model_path, map_location=DEVICE, weights_only=False)
+        checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
         
         if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
             model.load_state_dict(checkpoint['state_dict'])
@@ -145,9 +120,6 @@ def setup_model_and_config():
             model.load_state_dict(checkpoint)
         
         model.eval()
-        
-        # Remove o arquivo temporário
-        os.unlink(tmp_model_path)
         
     except Exception as e:
         st.error(f"Erro ao carregar modelo: {e}")
