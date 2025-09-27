@@ -1108,8 +1108,14 @@ def page_detect(model, config):
     pixel_threshold = config.get('pixel_visualization_threshold', 0.5)
 
     # Seção de seleção simples
-    st.markdown("### <span class='emoji emoji-success'>🖼️</span> Seleção de Imagem")
-    st.markdown("<span class='emoji emoji-warning'>👆</span> Escolha uma imagem de exemplo para análise detalhada")
+    st.markdown("""
+    <div class="section-header">
+        <span class='emoji emoji-success'>🖼️</span> Seleção de Imagem
+    </div>
+    <div class="section-subtitle">
+        <span class='emoji emoji-warning'>👆</span> Escolha uma imagem de exemplo para análise detalhada
+    </div>
+    """, unsafe_allow_html=True)
 
     def run_prediction(image: Image.Image, key_prefix: str = "single"):
         """Executa a predição e exibe os resultados usando funções do model_utils.py"""
@@ -1340,9 +1346,8 @@ def page_detect(model, config):
                 try:
                     img = Image.open(img_path)
                     loaded_images.append(img)
-                    # Extrai o nome do arquivo original do sufixo
-                    original_name = img_path.split('_')[-1] if '_' in img_path else os.path.basename(img_path)
-                    caption = original_name.replace('.png', '').replace('_', ' ').title()
+                    # Usa o nome do arquivo diretamente
+                    caption = os.path.basename(img_path).replace('.png', '').replace('_', ' ').title()
                     captions.append(caption)
                 except Exception as e:
                     st.warning(f"Erro ao carregar imagem {img_path}: {e}")
