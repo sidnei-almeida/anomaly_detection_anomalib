@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import requests
 import tempfile
 import os
+import time
+import collections
 
 # --------------------------------------------------------------------------
 # 1. ARQUITETURA DO MODELO (Deve ser idêntica à do treino)
