@@ -8,6 +8,9 @@ import streamlit as st
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import requests
+import tempfile
+import os
 
 # --------------------------------------------------------------------------
 # 1. ARQUITETURA DO MODELO (Deve ser idêntica à do treino)
@@ -71,24 +74,50 @@ class UNet(nn.Module):
 @st.cache_resource
 def setup_model_and_config():
     """
-    Carrega o modelo U-Net e os thresholds a partir dos arquivos.
+    Carrega o modelo U-Net e os thresholds a partir dos arquivos do GitHub.
     Usa o cache do Streamlit para executar apenas uma vez.
     """
     DEVICE = torch.device('cpu')
     
-    # Constrói os caminhos para os arquivos dentro da pasta 'models'
-    base_path = Path(__file__).resolve().parent
-    model_path = base_path / "models" / "bottle_unet_best.pth"
-    config_path = base_path / "models" / "bottle_unet_config.json"
-
-    # Carrega a configuração (thresholds)
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-
-    # Carrega o modelo
-    model = UNet().to(DEVICE)
-    model.load_state_dict(torch.load(model_path, map_location=DEVICE))
-    model.eval()
+    # URLs dos arquivos no GitHub
+    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/main"
+    MODEL_URL = f"{GITHUB_BASE_URL}/models/bottle_unet_best.pth"
+    CONFIG_URL = f"{GITHUB_BASE_URL}/models/bottle_unet_config.json"
+    
+    # Baixa e carrega a configuração
+    try:
+        config_response = requests.get(CONFIG_URL)
+        config_response.raise_for_status()
+        config = config_response.json()
+    except Exception as e:
+        st.error(f"Erro ao carregar configuração: {e}")
+        # Configuração padrão como fallback
+        config = {
+            "classification_threshold": 0.000205,
+            "pixel_visualization_threshold": 20
+        }
+    
+    # Baixa o modelo para um arquivo temporário
+    try:
+        model_response = requests.get(MODEL_URL)
+        model_response.raise_for_status()
+        
+        # Cria arquivo temporário
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pth') as tmp_file:
+            tmp_file.write(model_response.content)
+            tmp_model_path = tmp_file.name
+        
+        # Carrega o modelo
+        model = UNet().to(DEVICE)
+        model.load_state_dict(torch.load(tmp_model_path, map_location=DEVICE))
+        model.eval()
+        
+        # Remove o arquivo temporário
+        os.unlink(tmp_model_path)
+        
+    except Exception as e:
+        st.error(f"Erro ao carregar modelo: {e}")
+        return None, config
     
     return model, config
 

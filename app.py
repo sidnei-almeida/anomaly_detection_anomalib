@@ -778,24 +778,48 @@ hr {
 
 @st.cache_data(show_spinner=False)
 def load_training_history():
-    """Carrega o histórico de treinamento do modelo U-Net"""
-    history_path = os.path.join(TRAINING_HISTORY_DIR, "bottle_unet_history.json")
-    if os.path.exists(history_path):
-        with open(history_path, 'r') as f:
-            return json.load(f)
-    return None
+    """Carrega o histórico de treinamento do modelo U-Net do GitHub"""
+    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/main"
+    HISTORY_URL = f"{GITHUB_BASE_URL}/training_history/bottle_unet_history.json"
+    
+    try:
+        response = requests.get(HISTORY_URL)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        st.warning(f"Erro ao carregar histórico de treinamento: {e}")
+        return None
 
 @st.cache_data(show_spinner=False)
 def get_example_images():
-    """Carrega imagens de exemplo para teste"""
-    if not os.path.exists(IMAGES_DIR):
-        return []
+    """Carrega imagens de exemplo do GitHub"""
+    GITHUB_BASE_URL = "https://raw.githubusercontent.com/sidnei-almeida/anomaly_detection_anomalib/main"
     
-    image_files = []
-    for ext in ['*.jpg', '*.jpeg', '*.png']:
-        image_files.extend(glob.glob(os.path.join(IMAGES_DIR, ext)))
+    # Lista de imagens de exemplo
+    example_images = [
+        "000.png",
+        "anomaly_1.png", 
+        "anomaly_2.png",
+        "anomaly_3.png"
+    ]
     
-    return sorted(image_files)
+    # Baixa as imagens do GitHub
+    downloaded_images = []
+    for image_name in example_images:
+        try:
+            image_url = f"{GITHUB_BASE_URL}/imagem/{image_name}"
+            response = requests.get(image_url)
+            response.raise_for_status()
+            
+            # Cria arquivo temporário
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f'_{image_name}') as tmp_file:
+                tmp_file.write(response.content)
+                downloaded_images.append(tmp_file.name)
+                
+        except Exception as e:
+            st.warning(f"Erro ao baixar imagem {image_name}: {e}")
+    
+    return downloaded_images
 
 def get_env_status():
     """Retorna informações do ambiente"""
