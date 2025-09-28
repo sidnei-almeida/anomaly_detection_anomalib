@@ -791,17 +791,18 @@ def load_training_history():
 @st.cache_data(show_spinner=False)
 def get_example_images():
     """Carrega imagens de exemplo localmente"""
-    # Lista de imagens de exemplo
-    example_images = [
-        "imagem/000.png",
-        "imagem/anomaly_1.png", 
-        "imagem/anomaly_2.png",
-        "imagem/anomaly_3.png"
-    ]
+    # Busca todos os arquivos de imagem na pasta IMAGES_DIR
+    # Usa glob para encontrar .png, .jpg, .jpeg, etc.
+    image_files = []
+    for ext in ['*.png', '*.jpg', '*.jpeg']:
+        image_files.extend(glob.glob(os.path.join(IMAGES_DIR, ext)))
+    
+    # Ordena as imagens para uma exibição consistente
+    image_files.sort()
     
     # Verifica se as imagens existem localmente
     existing_images = []
-    for image_path in example_images:
+    for image_path in image_files:
         if os.path.exists(image_path):
             existing_images.append(image_path)
         else:
