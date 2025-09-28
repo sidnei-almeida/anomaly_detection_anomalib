@@ -1432,7 +1432,7 @@ def page_training():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### <span class='emoji emoji-warning'>📊</span> Evolução das Losses")
+            st.markdown("### <span class='emoji emoji-warning'>📊</span> Evolução das Losses", unsafe_allow_html=True)
             fig_loss = go.Figure()
             fig_loss.add_trace(go.Scatter(
                 x=df_history['epoch'], 
@@ -1463,7 +1463,7 @@ def page_training():
             st.plotly_chart(fig_loss, use_container_width=True)
         
         with col2:
-            st.markdown("### <span class='emoji emoji-success'>📊</span> Distribuição das Losses")
+            st.markdown("### <span class='emoji emoji-success'>📊</span> Distribuição das Losses", unsafe_allow_html=True)
             fig_dist = go.Figure()
             fig_dist.add_trace(go.Histogram(
                 x=df_history['train_loss'], 
@@ -1490,7 +1490,7 @@ def page_training():
             st.plotly_chart(fig_dist, use_container_width=True)
         
         # Tabela de dados
-        st.markdown("### <span class='emoji'>📋</span> Dados de Treinamento")
+        st.markdown("### <span class='emoji'>📋</span> Dados de Treinamento", unsafe_allow_html=True)
         st.dataframe(df_history, use_container_width=True)
         
     else:
@@ -1498,7 +1498,7 @@ def page_training():
 
 def page_about():
     """Página sobre o projeto"""
-    st.markdown("## <span class='emoji emoji-success'>ℹ️</span> Sobre o Projeto")
+    st.markdown("## <span class='emoji emoji-success'>ℹ️</span> Sobre o Projeto", unsafe_allow_html=True)
     st.markdown(
         """
 <div class="card">
