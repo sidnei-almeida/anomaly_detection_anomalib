@@ -1245,13 +1245,13 @@ def page_detect(model, config):
               </h4>
             </div>
             """, unsafe_allow_html=True)
-            # Sempre mostrar a imagem com bounding box se houver anomalia
+            # Se for anomalia, exibe com bounding box
             if is_anomaly:
-                bbox_image = display_bounding_box(results)
-                st.image(bbox_image, use_container_width=True)
+                bbox_image = display_bounding_box(results, config)
             else:
-                # Para imagens normais, mostrar a imagem original
-                st.image(image, use_container_width=True)
+                # Caso contrário, exibe a imagem original redimensionada
+                bbox_image = np.array(results["original_image"].resize((256, 256)))
+            st.image(bbox_image, use_container_width=True)
         
         with col_heat:
             st.markdown("""

@@ -211,16 +211,32 @@ def get_heatmap_image(results: dict):
     plt.tight_layout()
     return fig
 
-def display_bounding_box(results: dict):
+def display_bounding_box(results: dict, config: dict):
     """
     Exibe a imagem original com bounding box minimalista destacando a área da anomalia.
+    Gera uma máscara interna com threshold mais sensível para um bounding box mais abrangente.
     """
     # Redimensiona a imagem original para 256x256
     original_resized = results['original_image'].resize((256, 256))
     original_np = np.array(original_resized)
     
-    # Encontra contornos na máscara binária
-    contours, _ = cv2.findContours(results['binary_mask'], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # --- Lógica específica para o Bounding Box ---
+    # Usa um threshold do arquivo de config para gerar uma máscara que captura a anomalia inteira.
+    bounding_box_threshold = config.get("bounding_box_threshold", 1.5) # Fallback para 1.5
+    _, sensitive_mask = cv2.threshold(
+        results['anomaly_map_scaled'], 
+        bounding_box_threshold, 
+        255, 
+        cv2.THRESH_BINARY
+    )
+
+    # Aplica dilatação para conectar regiões da anomalia, tornando o bounding box mais abrangente
+    dilation_iterations = config.get("dilation_iterations", 2) # Fallback para 2
+    kernel = np.ones((3,3), np.uint8)
+    sensitive_mask = cv2.dilate(sensitive_mask, kernel, iterations = dilation_iterations)
+    
+    # Encontra contornos na máscara binária SENSÍVEL
+    contours, _ = cv2.findContours(sensitive_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     # Desenha bounding boxes nos contornos encontrados
     result_image = original_np.copy()
