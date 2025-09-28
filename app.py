@@ -166,7 +166,8 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  animation: pulse 0.8s infinite alternate;
+  transform: translateY(-2px) !important;
   box-shadow: var(--shadow-xl);
   border-color: var(--border-accent);
 }
@@ -183,6 +184,7 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 }
 
 .metric:hover {
+  animation: pulse 0.8s infinite alternate;
   transform: translateY(-1px);
   box-shadow: var(--shadow-glow);
 }
@@ -464,8 +466,12 @@ h4 { font-size: 1.25rem; font-weight: 500; }
 
 /* Animações premium */
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(180deg); }
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes shimmer {
@@ -691,11 +697,23 @@ hr {
 }
 
 .card, .metric {
-  animation: fadeInUp 0.6s ease-out;
+  /* Remove animation: fadeInUp para evitar conflito com hover */
+  /* animation: fadeInUp 0.6s ease-out; */
 }
 
 .card:hover {
-  animation: glow 2s ease-in-out infinite;
+  /* Substitui glow por pulse para hover, ou remova se pulse for genérico */
+  /* animation: glow 2s ease-in-out infinite; */
+  animation: pulse 0.8s infinite alternate;
+  transform: translateY(-2px) !important; /* Mantém o levantamento */
+  box-shadow: var(--shadow-xl); /* Mantém a sombra */
+  border-color: var(--border-accent); /* Mantém a cor da borda */
+}
+
+.metric:hover {
+  animation: pulse 0.8s infinite alternate;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
 }
 
 .badge {
